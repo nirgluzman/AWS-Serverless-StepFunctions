@@ -1,0 +1,73 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: serverless-stepfunctions
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  profile: serverlessUser
+  region: ${opt:region, 'us-east-1'}
+  stage: dev
+  environment:
+    signupTableName: ${self:custom.signupTableName}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:*
+            - ses:*
+          Resource: '*'
+
+plugins:
+  # https://www.serverless.com/plugins/serverless-step-functions
+  - serverless-step-functions
+
+custom:
+  signupTableName: signup-table
+
+stepFunctions:
+  validate: true
+  stateMachines:
+    reminderEmail:
+      name: reminderEmail
+      events:
+        - http:
+            path: signup-with-reminder
+            method: POST
+      definition: ${file(./stepFunctions.yml)}
+
+functions:
+  addSignup:
+    handler: lambdas/stepFunctionLambdas/addSignup.handler
+  getSignup:
+    handler: lambdas/stepFunctionLambdas/getSignup.handler
+  sendReminderEmail:
+    handler: lambdas/stepFunctionLambdas/sendReminderEmail.handler
+
+resources:
+  Resources:
+    MyEmailSignUpTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.signupTableName}
+        AttributeDefinitions:
+          - AttributeName: ID
+            AttributeType: S
+        KeySchema:
+          - AttributeName: ID
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST

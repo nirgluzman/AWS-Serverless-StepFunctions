@@ -1,0 +1,12 @@
+@url = https://705z5sxwge.execute-api.us-east-1.amazonaws.com/dev
+
+
+###
+POST {{url}}/signup-with-reminder
+Content-Type: application/json
+
+{
+    "signup": {
+        "email": "nir.gluzman@gmail.com",
+    }
+}
